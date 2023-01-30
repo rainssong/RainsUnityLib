@@ -3,6 +3,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.IO;
 
+
+
 public class EncryptedPlayerPrefs
 {
     // http://www.codeproject.com/Articles/769741/Csharp-AES-bits-Encryption-Library-with-Salt
@@ -110,6 +112,11 @@ public class EncryptedPlayerPrefs
         return Encoding.UTF8.GetString(bytesDecrypted);
     }
 
+    /// <summary>
+    /// 加密存储
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
     private static void SetSecurityValue(string key, string value)
     {
         string hideKey = MakeHash(key + _saltForKey);

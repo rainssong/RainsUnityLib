@@ -7,7 +7,7 @@
 * MonoBehaviourExtension
 
 ```csharp
-GetAddComponent<>(); 获取或添加组件  
+GetAddComponent<T>(); 获取或添加组件  
 BindFieldsWithChildren：自动获取子对象
 SetActivateWithChildren：修改所有子对象Active
 Invoke：延迟执行，允许非mono调用

@@ -81,10 +81,10 @@ namespace com.rainssong.mvvm
             binder.Bind(newValue);
 
 
-            binder2.Unbind(oldValue);
-            if (newValue != null)
-                binder2.type = newValue.GetType();
-            binder2.Bind(newValue);
+            //binder2.Unbind(oldValue);
+            //if (newValue != null)
+            //    binder2.type = newValue.GetType();
+            //binder2.Bind(newValue);
         }
     }
 }

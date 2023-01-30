@@ -18,16 +18,17 @@ namespace com.rainssong.mono
 
         private void Awake()
         {
-            if(HideOnStart)
-            {
-                StartEvent.AddListener(()=>this.gameObject.SetActive(false));
-            }
+
             // if (HideOnAwake && Time.time < 0.1) this.Hide();
             AwakeEvent?.Invoke();
         }
 
         private void Start()
         {
+            if (HideOnStart)
+            {
+                StartEvent.AddListener(() => this.gameObject.SetActive(false));
+            }
             StartEvent?.Invoke();
         }
 

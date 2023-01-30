@@ -24,7 +24,13 @@ namespace com.rainssong.mono
         private Vector3 scale;
 
 
-        // Checks to see if a lock state has changed and if so performs a callback
+        // 
+        /// <summary>
+        /// Checks to see if a lock state has changed and if so performs a callback
+        /// </summary>
+        /// <param name="locked"></param>
+        /// <param name="prevlocked"></param>
+        /// <param name="callback"></param>
         private void CheckLock(bool locked, ref bool prevlocked, Action callback)
         {
             // if locked but was not previously locked then perform callback

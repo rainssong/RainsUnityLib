@@ -19,10 +19,4 @@ public class Test : MonoBehaviour
         Debug.Log(intMono>22);
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
 }

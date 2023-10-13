@@ -29,9 +29,9 @@ namespace com.rainssong.mvvm.sample
         void Start()
         {
             //someListener=new ValueListener<string>("SB");
-            //someListener.onValueChanged+=onNameChanged;
+            someListener.onValueChanged+= onNameChanged;
             //binder2.type= typeof(TestModel);
-            binder2.Add<int>("atk", onAtkChanged);
+            binder.Add<int>(nameof(model.atk), onAtkChanged);
 
             //这里就会自动bind
             model = new TestModel();

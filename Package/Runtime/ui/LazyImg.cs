@@ -31,13 +31,13 @@ namespace com.rainssong.ui
         {
             idLis.onValueChanged = IdHandler;
             AssetLoadManager.Instance.requestManager.onLoadComplete += this.CompleteHander;
-            CompleteHander();
+            CompleteHander(id);
 
         }
 
         private void IdHandler(string arg1, string arg2)
         {
-            CompleteHander();
+            CompleteHander(arg2);
         }
 
         async public Task FadeOut(float targetAlpha, float duration)
@@ -64,25 +64,31 @@ namespace com.rainssong.ui
             }
         }
 
-        public async void CompleteHander()
+        public async void CompleteHander(string uid)
         {
-            if (!id.IsNullOrEmpty())
+             if (!id.IsNullOrEmpty())
             {
-                var sp = AssetLoadManager.Instance.requestManager.GetSprite(id);
-                var tex = AssetLoadManager.Instance.requestManager.GetTexture2D(id);
-                if (sp == null)
+                if (id==uid)
                 {
-                    return;
-                }
+                    var sp = AssetLoadManager.Instance.requestManager.GetSprite(id);
+
+                    var tex = AssetLoadManager.Instance.requestManager.GetTexture2D(id);
+                    if (sp == null)
+                    {
+                        await FadeOut(0, 0.2f);
+                        return;
+                    }
 
 
-                if (image.sprite == null || tex != image.sprite.texture)
-                {
-                    await FadeOut(0,0.2f);
-                    image.sprite = sp;
-                    OnChange?.Invoke(sp);
-                    await FadeIn(1, 0.2f);
+                    if (image.sprite == null || sp != image.sprite)
+                    {
+                        await FadeOut(0, 0.2f);
+                        image.sprite = sp;
+                        OnChange?.Invoke(sp);
+                        await FadeIn(1, 0.2f);
+                    }
                 }
+
 
                 //FIXME 这样判断不了
                 //if (image.sprite == null || tex != image.sprite.texture)

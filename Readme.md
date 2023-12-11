@@ -47,3 +47,13 @@ Invoke：延迟执行，允许非mono调用
 * ReflectionCore：反射工具
 * SafePlayerPrefs：加密Pref
 * Snapshoter：截图
+
+# TODO
+
+* Alert UI
+* SettingUI
+* LanguageText可以随时修改JSON内容，增加一个Save按钮
+
+# BUG
+
+LanguageText 存在不同语言配置全部被加载的情况，然而实际运行中，只会使用一个配置

@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 namespace com.rainssong.utils
 {
     /// <summary>
+    /// 加强版Log，可以在编辑器中调用
     /// TODO:加入Channel设定，由ScriptObject设定Channel和Color，
     /// </summary>
     public class RainDebug : SingletonMono<RainDebug>

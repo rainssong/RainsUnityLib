@@ -131,12 +131,10 @@ namespace com.rainssong.io
         {
             if (string.IsNullOrEmpty (_filePathName) || string.IsNullOrEmpty (_outputPath))
             {
-                if (null != _unzipCallback)
-                    _unzipCallback.OnFinished (false);
+                _unzipCallback?.OnFinished (false);
 
                 return false;
             }
-
             try
             {
                 return UnzipFile (File.OpenRead (_filePathName), _outputPath, _password, _unzipCallback);
@@ -145,8 +143,7 @@ namespace com.rainssong.io
             {
                 Debug.LogError ("[ZipUtility.UnzipFile]: " + _e.ToString ());
 
-                if (null != _unzipCallback)
-                    _unzipCallback.OnFinished (false);
+                _unzipCallback?.OnFinished (false);
 
                 return false;
             }
@@ -214,6 +211,8 @@ namespace com.rainssong.io
                     if (string.IsNullOrEmpty (entry.Name))
                         continue;
 
+                    
+
                     if ((null != _unzipCallback) && !_unzipCallback.OnPreUnzip (entry))
                         continue; // 过滤
 
@@ -229,21 +228,19 @@ namespace com.rainssong.io
                     // 写入文件
                     try
                     {
-                        using (FileStream fileStream = File.Create (filePathName))
+                        using FileStream fileStream = File.Create(filePathName);
+                        byte[] bytes = new byte[1024];
+                        while (true)
                         {
-                            byte[] bytes = new byte[1024];
-                            while (true)
+                            int count = zipInputStream.Read(bytes, 0, bytes.Length);
+                            if (count > 0)
+                                fileStream.Write(bytes, 0, count);
+                            else
                             {
-                                int count = zipInputStream.Read (bytes, 0, bytes.Length);
-                                if (count > 0)
-                                    fileStream.Write (bytes, 0, count);
-                                else
-                                {
-                                    if (null != _unzipCallback)
-                                        _unzipCallback.OnPostUnzip (entry);
+                                if (null != _unzipCallback)
+                                    _unzipCallback.OnPostUnzip(entry);
 
-                                    break;
-                                }
+                                break;
                             }
                         }
                     }

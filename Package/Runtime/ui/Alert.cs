@@ -25,11 +25,6 @@ namespace com.rainssong.ui
 			set { contextTxt.text = value; }
 		}
 
-		// Update is called once per frame
-		void Update ()
-		{
-
-		}
 
 		public void Show (string c, bool showBtn = true, Action cb = null)
 		{

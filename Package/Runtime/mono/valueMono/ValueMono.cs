@@ -8,6 +8,7 @@ namespace com.rainssong.mono.valueMono
 {
     /// <summary>
     /// Value with changeListener, you must addComponent and set reference
+    ///1实现响应式，2CodeLess，3运算符重载，无感替换
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// 

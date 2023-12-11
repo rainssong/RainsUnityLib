@@ -57,12 +57,12 @@ namespace com.rainssong.io
             return path;
         }
 
-
+        //加前缀安卓下File类就不能读取
         public static string GetPersistentDataPath(string filename)
         {
-            #if UNITY_ANDROID && !UNITY_EDITOR
-                return "file://"+Application.persistentDataPath + "/" + filename;
-            #endif
+#if UNITY_ANDROID && !UNITY_EDITOR
+                return @"file://"+Application.persistentDataPath + "/" + filename;
+#endif
 
             return Application.persistentDataPath + "/" + filename;
         }
@@ -76,7 +76,7 @@ namespace com.rainssong.io
             }
 
             FileSystemInfo[] fileinfo = dir.GetFileSystemInfos ();
-            List<DirectoryInfo> result = new List<DirectoryInfo> ();
+            List<DirectoryInfo> result = new();
             for (int i = fileinfo.Length - 1; i >= 0; i--)
             {
                 if (fileinfo[i] is DirectoryInfo)

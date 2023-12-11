@@ -7,7 +7,11 @@ using UnityEngine;
 using UnityEngine.UI;
 
 namespace com.rainssong.mvvm.sample
+    
 {
+    /// <summary>
+    /// 这个案例展示如何将Model与View绑定，主要是使用Binder将Model中的ValueLis和View中的方法进行捆绑。
+    /// </summary>
     public class TestView : ViewBase<TestModel>
     {
         public Button btn1;
@@ -15,28 +19,22 @@ namespace com.rainssong.mvvm.sample
         public Text atkText;
         public Text nameText;
 
-        public ValueListener<string> someListener;
-
-        //public string playerName
-        //{
-        //    get => someListener.Value;
-        //    set => someListener.Value = value;
-        //}
-
-        public string playerName { get => someListener.Value; set=> someListener.Value = value; }
+        //封装Model的属性，目的是为了封装Model减少书写
+        public string playerName { get => model.name.Value; set=> model.name.Value = value; }
 
         // Start is called before the first frame update
         void Start()
         {
-            //someListener=new ValueListener<string>("SB");
-            someListener.onValueChanged+= onNameChanged;
-            //binder2.type= typeof(TestModel);
-            binder.Add<int>(nameof(model.atk), onAtkChanged);
 
-            //这里就会自动bind
+            //自动将Model的Atk绑定事件，绑定后只需修改Model值
+            binder.Add<int>(nameof(model.atk), onAtkChanged);
+            binder.Add<string>(nameof(model.name), onNameChanged);
+
+            //赋值后就会自动bind
             model = new TestModel();
 
-            // binder.Bind(model);
+            //不赋值需要手动Bind
+            //binder.Bind(model);
         }
 
         public void ChangeAtk(int value)

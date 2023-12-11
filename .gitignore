@@ -1,5 +1,6 @@
-Bin-Debug/
 Doc/
+/Plugins/
+/PlayerPrefsEditor/
 
 # Unity3D Proj
 /[Ll]ibrary/

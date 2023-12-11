@@ -11,6 +11,9 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
 using static System.Net.WebRequestMethods;
+using System.Text.RegularExpressions;
+using System.Text;
+using System.Linq;
 
 namespace com.rainssong.io
 {
@@ -18,8 +21,9 @@ namespace com.rainssong.io
     {
         protected List<LoadingItem> loadList = new List<LoadingItem>();
         public Dictionary<string, UnityWebRequest> urlDic = new Dictionary<string, UnityWebRequest>();
-        public Dictionary<string, UnityWebRequest> idDic = new Dictionary<string, UnityWebRequest>();
-        public Action onLoadComplete;
+        public Dictionary<string, UnityWebRequest> idDic = new();
+        public Action<string> onLoadComplete;
+        public Action onLoadAllComplete;
 
         public int completeFlag = 0;
 
@@ -28,6 +32,7 @@ namespace com.rainssong.io
         public string baseUrl = "";
 
         public bool printLog = false;
+        private bool isLoading;
 
         public void Reset()
         {
@@ -36,19 +41,23 @@ namespace com.rainssong.io
                 {
                     item.Value.Dispose();
                 }
-            loadList = new List<LoadingItem>();
+            //loadList = new List<LoadingItem>();
             urlDic = new Dictionary<string, UnityWebRequest>();
             idDic = new Dictionary<string, UnityWebRequest>();
         }
 
-
+        /// <summary>
+        /// TODO:安卓下无法判断
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
         public string GetFullPath(string path)
         {
             if (!path.Contains(":/"))
             {
                 if (baseUrl.EndsWith("/") || path.StartsWith("/"))
                 {
-                    return baseUrl + path;
+                    return baseUrl + path;//BUG安卓下完整地址依旧触发
                 }
                 else
                 {
@@ -58,7 +67,7 @@ namespace com.rainssong.io
             return path;
         }
 
-        protected UnityWebRequest CreateRequest(string url, RequestParams pams = null)
+        public UnityWebRequest CreateRequest(string url, RequestParams pams = null)
         {
             var urlFix = GetFullPath(url);
 
@@ -74,7 +83,12 @@ namespace com.rainssong.io
                             urlFix = "file://" + urlFix;
             #endif*/
 
-            UnityWebRequest webRequest = new UnityWebRequest(urlFix);
+            
+            if (urlDic.ContainsKey(urlFix))
+                return urlDic[urlFix];
+
+
+            UnityWebRequest webRequest= new UnityWebRequest(urlFix);
             // UnityWebRequest webRequest = UnityWebRequest.Get (urlFix);
             urlDic[urlFix] = webRequest;
             webRequest.method = Http.Get;
@@ -96,8 +110,6 @@ namespace com.rainssong.io
                 webRequest.downloadHandler = new DownloadHandlerBuffer();
             }
 
-
-
             return webRequest;
         }
 
@@ -106,6 +118,13 @@ namespace com.rainssong.io
             if (idDic.ContainsKey(id))
                 return idDic[id].downloadHandler.data;
             return null;
+        }
+
+
+        public string GetString(string idOrURL)
+        {
+            var result = Encoding.UTF8.GetString(GetData(idOrURL));
+            return result;
         }
 
         public Texture2D GetTexture2D(string idOrURL)
@@ -126,8 +145,8 @@ namespace com.rainssong.io
         {
             var req = GetRequestByID(id);
             if (req == null) return null;
-            if (req.isDone== false)
-                    return null;
+            if (req.isDone == false)
+                return null;
             return DownloadHandlerTexture.GetContent(req);
         }
 
@@ -182,7 +201,10 @@ namespace com.rainssong.io
             if (printLog)
                 print("RequestManager.GetRequestByURL:" + urlFix);
             //在安卓下多了个jar:file:///的前缀
-            if (!urlDic.ContainsKey(urlFix))
+
+            var tryGet=urlDic.FirstOrDefault(kv => kv.Key == urlFix);
+
+            if (tryGet.Value==null)
             {
                 if (createIfNotExist)
                     CreateRequest(urlFix);
@@ -207,12 +229,12 @@ namespace com.rainssong.io
 
         protected IEnumerator _Get(string url, Action<UnityWebRequest> actionResult = null)
         {
-            UnityWebRequest webRequest = GetRequestByURL(url,true);
+            UnityWebRequest webRequest = GetRequestByURL(url, true);
 
             if (webRequest.isDone)
-                yield break;
+                //yield break;
 
-            if(webRequest.result==UnityWebRequest.Result.Success)
+            if (webRequest.result == UnityWebRequest.Result.Success)
                 yield break;
             //print("Send"+url);
             //FIXME:InvalidOperationException: UnityWebRequest has already been sent; cannot begin sending the request again
@@ -224,7 +246,7 @@ namespace com.rainssong.io
             }
             else
             {
-                if (printLog) Debug.Log("RequestManager.Suceess:" + webRequest.url);
+                //if (printLog) Debug.Log("RequestManager.Suceess:" + webRequest.url);
                 actionResult?.Invoke(webRequest);
             }
         }
@@ -246,45 +268,83 @@ namespace com.rainssong.io
             actionResult?.Invoke(webRequest);
         }
 
+        /// <summary>
+        /// obstacle :用 CreateRequest 替代
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="param"></param>
         public void Add(string url, RequestParams param = null)
         {
-            var li = new LoadingItem();
-            li.url = url;
+            //var li = new LoadingItem();
+            //li.url = url;
             //提前创建绑定ID
             CreateRequest(url, param);
-            if (printLog)
-                Debug.Log("RequestManager.Add:" + url);
-            loadList.Add(li);
+            //if (printLog)
+            //    Debug.Log("RequestManager.Add:" + url);
+            //loadList.Add(li);
         }
 
         /// <summary>
+        /// TODO：优化，维护一个未完成列表
+        /// </summary>
+        /// <returns></returns>
+        public List<UnityWebRequest> GetUncompletedRequests()
+        {
+            var result = new List<UnityWebRequest>();
+
+            foreach (var item in urlDic)
+            {
+                if (item.Value.isDone == false)
+                    result.Add(item.Value);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// TODO:改为双向词典
         /// 单次完成,检测整体完成情况
         /// </summary>
         protected void OnComplete(UnityWebRequest uwr)
         {
-            completeFlag++;
+            //completeFlag++;
 
             if (printLog)
-                print("complete: " + uwr.url + " " + completeFlag + "/" + loadList.Count);
+                print("complete: " + uwr.url + " Left " + ":" + loadList.Count);
 
-            if (completeFlag == loadList.Count)
+            var id = idDic.FirstOrDefault(kv => kv.Value.url == uwr.url).Key;
+
+
+            onLoadComplete?.Invoke(id);
+            //BUG:会触发很多次，原因是完成事件抛出比标记晚，所以已经全部加载完了还是会接到事件，解决方法，加载完成后标记
+            if (GetUncompletedRequests().Count == 0 && isLoading)
             {
-                loadList = new List<LoadingItem>();
-                if (onLoadComplete != null)
-                    onLoadComplete.Invoke();
+                onLoadAllComplete?.Invoke();
+                isLoading = false;
             }
-
-
+                
         }
 
+        /// <summary>
+        /// TODO:维护一个未完成列表
+        /// </summary>
         public void StartLoad()
         {
-            completeFlag = 0;
+            //var s = GetUncompletedRequests();
 
-            for (int i = 0; i < loadList.Count; i++)
+            foreach (var item in urlDic)
             {
-                Get(loadList[i].url, OnComplete);
+                if (item.Value.isDone)
+                    continue;
+                Get(item.Key, OnComplete);
             }
+
+            isLoading = true;
+
+            //for (int i = 0; i < loadList.Count; i++)
+            //{
+            //    Get(loadList[i].url, OnComplete);
+            //}
         }
 
         public byte[] GetData(string idOrURL)
@@ -327,6 +387,22 @@ namespace com.rainssong.io
         {
             if (printLog)
                 print("Destroy");
+        }
+
+        public string[] GetFiles(string v)
+        {
+            List<string> files = new();
+
+            v = v.Replace("*", "");
+
+            foreach (var item in urlDic)
+            {
+                var url = item.Key;
+                if (url.Contains(v))
+                    files.Add(url);
+            }
+
+            return files.ToArray();
         }
     }
 
